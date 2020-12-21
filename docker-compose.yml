@@ -1,0 +1,44 @@
+version: "3"
+
+volumes:
+  db_files:
+
+services:
+  worker:
+    container_name: ggc_worker
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    environment:
+      GITHUB_URL: ${GITHUB_URL}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      MONGO_URI: "mongodb://${MONGO_USER}:${MONGO_PASS}@ggc_mongo:27017/admin"
+      MONGO_DB_NAME: "commits"
+      PERIOD_SECOND: ${PERIOD_SECOND}
+
+  mongo:
+    container_name: ggc_mongo
+    image: mongo
+    restart: always
+    #volumes:
+    #  - db_files:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+      MONGO_INITDB_DATABASE: admin
+
+  mongo-express:
+    container_name: ggc_mongo-express
+    image: mongo-express
+    restart: always
+    ports:
+      - 1112:8081
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS}
+      #ME_CONFIG_MONGODB_SERVER: mongo
